@@ -1,3 +1,4 @@
+// 主程式（整合所有模式、VR眼鏡功能）
 let video;
 let handpose;
 let predictions = [];
@@ -15,6 +16,8 @@ let fruitImages = {};
 let slicedFruits = [];
 let bombs = [];
 let bombImg;
+let vrGlassesImg;
+let showVRGlasses = false;
 
 let questionSet = [
   { text: "教育科技強調科技與學習的整合", correct: true },
@@ -27,9 +30,10 @@ let questionSet = [
 ];
 
 function preload() {
-  fruitImages['watermelon'] = loadImage('pngtree-cute-anthropomorphic-fruit-watermelon-png-image_2844683-removebg-preview.png');
+  fruitImages['watermelon'] = loadImage('pngtree-cute-anthropomorphic-fruit-watermelon-png-image_2844683-removebg-preview');
   fruitImages['watermelon_half'] = loadImage('b248b63a1961e1f38d33f42e2b10066a-removebg-preview.png');
   bombImg = loadImage('pngtree-ignite-the-bomb-image_2233752-removebg-preview.png');
+  vrGlassesImg = loadImage('istockphoto-831337754-612x612-removebg-preview.png');
 }
 
 function setup() {
@@ -54,6 +58,10 @@ function setup() {
     else currentGame = "quiz";
     resetGame();
   });
+
+  let vrBtn = createButton("VR眼鏡");
+  vrBtn.position(130, 10);
+  vrBtn.mousePressed(() => showVRGlasses = !showVRGlasses);
 }
 
 function resetGame() {
@@ -85,11 +93,7 @@ function draw() {
   textSize(20);
   stroke(0);
   strokeWeight(3);
-  text(
-    currentGame === "quiz" ? `分數：${score}  時間：${timer}` :
-    currentGame === "blocks" ? `堆積木模式，高度：${blocks.length}` :
-    `切西瓜遊戲 分數：${score}`, width / 2, 20
-  );
+  text(currentGame === "quiz" ? `分數：${score}  時間：${timer}` : (currentGame === "blocks" ? `堆積木模式，高度：${blocks.length}` : `切西瓜遊戲 分數：${score}`), width / 2, 20);
   noStroke();
 
   if (currentGame === "quiz") {
@@ -168,6 +172,8 @@ function drawHandAndDetect() {
     const indexTip = hand[8];
     const middleTip = hand[12];
     const wrist = hand[0];
+    const leftEye = hand[1];
+    const rightEye = hand[2];
 
     noFill();
     stroke(0, 255, 0);
@@ -177,15 +183,23 @@ function drawHandAndDetect() {
     let handX = width - indexTip[0];
     let handY = indexTip[1];
 
+    if (showVRGlasses) {
+      let eyeX = (width - leftEye[0] + width - rightEye[0]) / 2;
+      let eyeY = (leftEye[1] + rightEye[1]) / 2;
+      image(vrGlassesImg, eyeX - 100, eyeY - 50, 200, 100);
+    }
+
     if (currentGame === "quiz") {
       for (let i = bubbles.length - 1; i >= 0; i--) {
         let b = bubbles[i];
         if (dist(width - indexTip[0], indexTip[1], b.x, b.y) < b.r) {
           if (thumbTip[1] < wrist[1] - 30) {
-            score += b.correct ? 1 : -1;
+            if (b.correct) score++;
+            else score--;
             bubbles.splice(i, 1);
           } else if (dist(indexTip[0], indexTip[1], middleTip[0], middleTip[1]) > 40) {
-            score += !b.correct ? 1 : -1;
+            if (!b.correct) score++;
+            else score--;
             bubbles.splice(i, 1);
           }
         }
@@ -197,7 +211,8 @@ function drawHandAndDetect() {
         holdingBlock.x = handX;
         holdingBlock.y = handY;
 
-        if (dist(indexTip[0], indexTip[1], middleTip[0], middleTip[1]) > 60 && blockCooldown <= 0) {
+        let distance = dist(indexTip[0], indexTip[1], middleTip[0], middleTip[1]);
+        if (distance > 60 && blockCooldown <= 0) {
           holdingBlock.snapToStack();
           blocks.push(holdingBlock);
           holdingBlock = null;
@@ -222,7 +237,6 @@ function drawHandAndDetect() {
   }
 }
 
-// --- Classes ---
 class Bubble {
   constructor(txt, correct) {
     this.text = txt;
@@ -232,15 +246,8 @@ class Bubble {
     this.r = 60;
     this.speed = 2;
   }
-
-  update() {
-    this.y += this.speed;
-  }
-
-  offScreen() {
-    return this.y > height + this.r;
-  }
-
+  update() { this.y += this.speed; }
+  offScreen() { return this.y > height + this.r; }
   display() {
     fill(this.correct ? 'lightblue' : 'lightpink');
     stroke(0);
@@ -261,12 +268,10 @@ class Block {
     this.w = 50;
     this.h = 30;
   }
-
   snapToStack() {
     this.y = height - 30 - blocks.length * 30;
     this.x = constrain(this.x, this.w / 2, width - this.w / 2);
   }
-
   display() {
     fill("gold");
     stroke(0);
@@ -283,25 +288,14 @@ class Fruit {
     this.vy = -random(10, 18);
     this.gravity = 0.4;
   }
-
   update() {
     this.x += this.vx;
     this.y += this.vy;
     this.vy += this.gravity;
   }
-
-  offScreen() {
-    return this.y > height + 50;
-  }
-
-  display() {
-    image(fruitImages['watermelon'], this.x - 50, this.y - 50, 100, 100);
-
-  }
-
-  isTouched(x, y) {
-    return dist(x, y, this.x, this.y) < 40;
-  }
+  offScreen() { return this.y > height + 50; }
+  display() { image(fruitImages['watermelon'], this.x - 40, this.y - 40, 80, 80); }
+  isTouched(x, y) { return dist(x, y, this.x, this.y) < 40; }
 }
 
 class SlicedFruit {
@@ -313,18 +307,13 @@ class SlicedFruit {
     this.vy = -2;
     this.gravity = 0.2;
   }
-
   update() {
     this.x1 = this.x + this.vx1;
     this.x2 = this.x + this.vx2;
     this.y += this.vy;
     this.vy += this.gravity;
   }
-
-  offScreen() {
-    return this.y > height + 50;
-  }
-
+  offScreen() { return this.y > height + 50; }
   display() {
     image(fruitImages['watermelon_half'], this.x1 - 30, this.y - 30, 30, 60);
     image(fruitImages['watermelon_half'], this.x2, this.y - 30, 30, 60);
@@ -339,22 +328,12 @@ class Bomb {
     this.vy = -random(10, 18);
     this.gravity = 0.4;
   }
-
   update() {
     this.x += this.vx;
     this.y += this.vy;
     this.vy += this.gravity;
   }
-
-  offScreen() {
-    return this.y > height + 50;
-  }
-
-  display() {
-    image(bombImg, this.x - 20, this.y - 20, 40, 40);
-  }
-
-  isTouched(x, y) {
-    return dist(x, y, this.x, this.y) < 40;
-  }
+  offScreen() { return this.y > height + 50; }
+  display() { image(bombImg, this.x - 20, this.y - 20, 40, 40); }
+  isTouched(x, y) { return dist(x, y, this.x, this.y) < 40; }
 }
