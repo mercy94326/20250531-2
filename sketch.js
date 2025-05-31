@@ -27,7 +27,7 @@ let questionSet = [
 ];
 
 function preload() {
-  fruitImages['watermelon'] = loadImage('pngtree-cute-anthropomorphic-fruit-watermelon-png-image_2844683-removebg-preview');
+  fruitImages['watermelon'] = loadImage('pngtree-cute-anthropomorphic-fruit-watermelon-png-image_2844683-removebg-preview.png');
   fruitImages['watermelon_half'] = loadImage('b248b63a1961e1f38d33f42e2b10066a-removebg-preview.png');
   bombImg = loadImage('pngtree-ignite-the-bomb-image_2233752-removebg-preview.png');
 }
