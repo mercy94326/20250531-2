@@ -295,7 +295,8 @@ class Fruit {
   }
 
   display() {
-    image(fruitImages['watermelon'], this.x - 30, this.y - 30, 60, 60);
+    image(fruitImages['watermelon'], this.x - 50, this.y - 50, 100, 100);
+
   }
 
   isTouched(x, y) {
