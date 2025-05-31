@@ -57,23 +57,21 @@ function setup() {
 }
 
 function resetGame() {
+  score = 0;
   if (currentGame === "quiz") {
-    score = 0;
     timer = 60;
     bubbles = [];
     gameStarted = true;
-    loop();
   } else if (currentGame === "blocks") {
     blocks = [];
     holdingBlock = null;
     blockCooldown = 0;
-    loop();
   } else if (currentGame === "fruit") {
     fruits = [];
     slicedFruits = [];
     bombs = [];
-    loop();
   }
+  loop();
 }
 
 function draw() {
@@ -87,7 +85,11 @@ function draw() {
   textSize(20);
   stroke(0);
   strokeWeight(3);
-  text(currentGame === "quiz" ? `分數：${score}  時間：${timer}` : (currentGame === "blocks" ? `堆積木模式，高度：${blocks.length}` : `切西瓜遊戲 分數：${score}`), width / 2, 20);
+  text(
+    currentGame === "quiz" ? `分數：${score}  時間：${timer}` :
+    currentGame === "blocks" ? `堆積木模式，高度：${blocks.length}` :
+    `切西瓜遊戲 分數：${score}`, width / 2, 20
+  );
   noStroke();
 
   if (currentGame === "quiz") {
@@ -180,12 +182,10 @@ function drawHandAndDetect() {
         let b = bubbles[i];
         if (dist(width - indexTip[0], indexTip[1], b.x, b.y) < b.r) {
           if (thumbTip[1] < wrist[1] - 30) {
-            if (b.correct) score++;
-            else score--;
+            score += b.correct ? 1 : -1;
             bubbles.splice(i, 1);
           } else if (dist(indexTip[0], indexTip[1], middleTip[0], middleTip[1]) > 40) {
-            if (!b.correct) score++;
-            else score--;
+            score += !b.correct ? 1 : -1;
             bubbles.splice(i, 1);
           }
         }
@@ -197,8 +197,7 @@ function drawHandAndDetect() {
         holdingBlock.x = handX;
         holdingBlock.y = handY;
 
-        let distance = dist(indexTip[0], indexTip[1], middleTip[0], middleTip[1]);
-        if (distance > 60 && blockCooldown <= 0) {
+        if (dist(indexTip[0], indexTip[1], middleTip[0], middleTip[1]) > 60 && blockCooldown <= 0) {
           holdingBlock.snapToStack();
           blocks.push(holdingBlock);
           holdingBlock = null;
@@ -223,6 +222,7 @@ function drawHandAndDetect() {
   }
 }
 
+// --- Classes ---
 class Bubble {
   constructor(txt, correct) {
     this.text = txt;
